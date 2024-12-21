@@ -1,15 +1,34 @@
 import argparse
 from flask import Flask, jsonify
+from flask_swagger import swagger
+from flask_swagger_ui import get_swaggerui_blueprint
 import yaml
+import logging
 
 from standalone_application import StandaloneApplication
 from config import Config
+from routes.tasks.task_routes import task_bp
 
 app = Flask(__name__)
 
-@app.get("/api/v1/example")
-def hello_world():
-    return jsonify("Hello World!"), 200
+@app.get("/api/v1/swagger.json")
+def swagger_spec():
+    swag = swagger(app)
+    swag["info"]["version"] = "0.0.0"
+    swag["info"]["title"] = "Basic API Example"
+    return jsonify(swag)
+
+swaggerui_blueprint = get_swaggerui_blueprint(
+    "/api/docs",
+    "/api/v1/swagger.json",
+    config={
+        "app_name": "Basic Flask API",
+        "tryItOutEnabled": True
+    }
+)
+
+app.register_blueprint(task_bp)
+app.register_blueprint(swaggerui_blueprint)
 
 def main(config_path: str|None = None):
 
@@ -27,14 +46,16 @@ def main(config_path: str|None = None):
         config_yaml = yaml.safe_load(stream)
 
         port = int(config_yaml["port"])
+        log_level = str(config_yaml["log_level"])
         num_workers = int(config_yaml["num_workers"])
 
-        config = Config(port, num_workers)
+        config = Config(port, log_level, num_workers)
 
-        
+    logging.basicConfig(level=config.log_level, format='[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     options = {
         'bind': '%s:%s' % ('0.0.0.0', config.port),
+        'timeout': '120',
         'workers': config.num_workers,
     }
     StandaloneApplication(app, options).run()
