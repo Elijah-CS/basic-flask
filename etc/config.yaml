@@ -1,3 +1,4 @@
 port : 8082
 log_level: INFO
-num_workers: 5
+num_workers: 3
+zombie_killer_sleep: 10

@@ -1,6 +1,8 @@
+APScheduler==3.11.0
 argparse==1.4.0
 Flask==3.1.0
 flask-swagger==0.2.14
 flask-swagger-ui==4.11.1
 gunicorn==23.0.0
+psutil==6.1.1
 PyYAML==6.0.2

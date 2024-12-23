@@ -30,6 +30,12 @@ swaggerui_blueprint = get_swaggerui_blueprint(
 app.register_blueprint(task_bp)
 app.register_blueprint(swaggerui_blueprint)
 
+# ===============================================================
+def post_fork(server, worker):
+    print("This is a custom post_fork function")
+# ===============================================================
+
+
 def main(config_path: str|None = None):
 
     if not config_path:
@@ -48,8 +54,9 @@ def main(config_path: str|None = None):
         port = int(config_yaml["port"])
         log_level = str(config_yaml["log_level"])
         num_workers = int(config_yaml["num_workers"])
-
-        config = Config(port, log_level, num_workers)
+        zombie_killer_sleep = int(config_yaml["zombie_killer_sleep"])
+        
+        config = Config(port, log_level, num_workers, zombie_killer_sleep)
 
     logging.basicConfig(level=config.log_level, format='[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -57,8 +64,9 @@ def main(config_path: str|None = None):
         'bind': '%s:%s' % ('0.0.0.0', config.port),
         'timeout': '120',
         'workers': config.num_workers,
+        "post_fork": post_fork
     }
-    StandaloneApplication(app, options).run()
+    StandaloneApplication(app, options, config.zombie_killer_sleep).run()
 
 if __name__ == '__main__':
     main()

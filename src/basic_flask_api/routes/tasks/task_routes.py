@@ -1,8 +1,12 @@
 from flask import Blueprint, request, jsonify
 import logging
+from multiprocessing import get_context
+
+from .task_service import do_something
 
 logger = logging.getLogger("basic_api.task_routes")
 task_bp = Blueprint("tasks", __name__)
+
 
 @task_bp.post("/api/v1/executeTask")
 def task_execute():
@@ -13,6 +17,9 @@ def task_execute():
         - tasks
     """
     logger.info(f"Handling request {request.path} {request.method}")
+
+    p = get_context("spawn").Process(target=do_something, args=(5,), daemon=False)
+    p.start()
 
     return jsonify("Posting jobs"), 200
 
